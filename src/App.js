@@ -4,6 +4,7 @@ import Home from './Pages/HomePage';
 import CheckUp from './Pages/CheckUp';
 import BMI from './Pages/BMI';
 import MapView from './Pages/MapView';
+import Docchannel from './Pages/DocChannelling';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route path="/checkup" element={<CheckUp/>} />
           <Route path="/bmi" element={<BMI/>} />
           <Route path="/map" element={<MapView/>} />
+          <Route path="/doctors" element={<Docchannel/>} />
         </Routes>
       </BrowserRouter>
     </div>
