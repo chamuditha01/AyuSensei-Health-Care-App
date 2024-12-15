@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { supabase } from "../../Utils/SuperbaseClient";  // Import your Supabase client
 
 // Custom red icon for markers
 const redIcon = L.icon({
@@ -13,52 +14,30 @@ const redIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-// Sample hospitals with coordinates and Google Maps URLs
-const hospitals = [
-  {
-    name: 'National Hospital of Sri Lanka (NHSL)',
-    address: '28, Kynsey Road, Colombo 8',
-    position: [6.9271, 79.9744], // Coordinates for NHSL
-    googleMapsUrl: 'https://www.google.com/maps?q=6.9271,79.9744',
-  },
-  {
-    name: 'The Lanka Hospitals Corporation PLC',
-    address: '5, Kynsey Road, Colombo 8',
-    position: [6.8906, 79.8713], // Coordinates for Lanka Hospitals
-    googleMapsUrl: 'https://www.google.com/maps?q=6.8906,79.8713',
-  },
-  {
-    name: 'Colombo South Teaching Hospital',
-    address: 'Kalubowila, Dehiwala',
-    position: [6.8662, 79.9504], // Coordinates for Colombo South Teaching Hospital
-    googleMapsUrl: 'https://www.google.com/maps?q=6.8662,79.9504',
-  },
-  {
-    name: 'Sri Jayawardenepura General Hospital',
-    address: 'Nugegoda, Colombo',
-    position: [6.9276, 79.9733], // Coordinates for Sri Jayawardenepura General Hospital
-    googleMapsUrl: 'https://www.google.com/maps?q=6.9276,79.9733',
-  }
-];
-
 const MapView = () => {
-  const handleCopyClick = (url) => {
-    // Copy URL to clipboard
-    const textArea = document.createElement('textarea');
-    textArea.value = url;
-    document.body.appendChild(textArea);
-    textArea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textArea);
+  const [hospitals, setHospitals] = useState([]);
 
-    // Optional: alert user that the URL has been copied
-    alert('Location URL copied to clipboard!');
-  };
+  useEffect(() => {
+    // Fetch hospital data from Supabase
+    async function fetchHospitals() {
+      const { data, error } = await supabase
+        .from('Hospitals') // Make sure to use the correct table name
+        .select('*'); // You can also specify columns like ['name', 'latitude', 'longitude', 'location_link']
+
+      if (error) {
+        console.error('Error fetching hospital data:', error);
+      } else {
+        setHospitals(data); // Set the fetched data into state
+      }
+    }
+
+    fetchHospitals();
+  }, []); // Empty array ensures this runs once when the component mounts
 
   return (
     <MapContainer
-      center={[6.9271, 79.9744]} // Center the map on the National Hospital of Sri Lanka
-      zoom={14} // Zoom level
+      center={[6.84566, 79.9226]} // Default center (National Hospital of Sri Lanka)
+      zoom={10} // Zoom level
       style={{ height: '100vh', width: '100%' }}
       scrollWheelZoom={false} // Disable scroll zoom
     >
@@ -67,7 +46,7 @@ const MapView = () => {
         attribution="&copy; OpenStreetMap contributors"
       />
       {hospitals.map((hospital, index) => (
-        <Marker key={index} position={hospital.position} icon={redIcon}>
+        <Marker key={index} position={[hospital.latitude, hospital.longitude]} icon={redIcon}>
           <Tooltip permanent>{hospital.name}</Tooltip>
           <Popup>
             <strong>{hospital.name}</strong>
@@ -75,22 +54,12 @@ const MapView = () => {
             {hospital.address}
             <br />
             <a
-              href={hospital.googleMapsUrl}
+              href={hospital.location_link}
               target="_blank"
               rel="noopener noreferrer"
             >
               View on Google Maps
             </a>
-            <br />
-            <small>Copy this URL:</small>
-            <br />
-            <input
-              type="text"
-              value={hospital.googleMapsUrl}
-              readOnly
-              style={{ width: '100%' ,cursor:'pointer'}}
-              onClick={() => handleCopyClick(hospital.googleMapsUrl)} // Copy URL when clicked
-            />
           </Popup>
         </Marker>
       ))}

@@ -7,14 +7,22 @@ const DocChannel = () => {
   const [showMapLink, setShowMapLink] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [search, setSearch] = useState(false);
-  const [hospitals] = useState([
-    "City Hospital",
-    "Green Valley Clinic",
-    "Metro Care Center",
-  ]);
+  const [hospitals, setHospitals] = useState([]);
+  const [selectedHospital, setSelectedHospital] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState("");
   const [doctors, setDoctors] = useState([]);
 
   useEffect(() => {
+    // Fetch hospitals from Supabase
+    const fetchHospitals = async () => {
+      const { data, error } = await supabase.from("Hospitals").select("*");
+      if (error) {
+        console.error("Error fetching hospitals:", error);
+      } else {
+        setHospitals(data); // Update the hospitals state
+      }
+    };
+
     // Fetch doctors from Supabase
     const fetchDoctors = async () => {
       const { data, error } = await supabase.from("Doctors").select("*");
@@ -25,17 +33,52 @@ const DocChannel = () => {
       }
     };
 
+    fetchHospitals();
     fetchDoctors();
   }, []);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     setSearch(true);
-    const sampleBookings = [
-      { date: "Monday, 12 Dec", time: "10:00 AM - 11:00 AM" },
-      { date: "Wednesday, 14 Dec", time: "02:00 PM - 03:00 PM" },
-      { date: "Friday, 16 Dec", time: "09:00 AM - 10:00 AM" },
-    ];
-    setBookings(sampleBookings);
+
+    // Get the current date and calculate the next week's date range
+    const today = new Date();
+    const nextWeekStart = new Date(today);
+    nextWeekStart.setDate(today.getDate() + (7 - today.getDay())); // Start of next week (Monday)
+
+    const nextWeekEnd = new Date(today);
+    nextWeekEnd.setDate(today.getDate() + (13 - today.getDay())); // End of next week (Sunday)
+
+    // Fetch available bookings based on selected doctor and hospital
+    const { data, error } = await supabase
+      .from("HospitalNDoctors")
+      .select("*, Doctor!inner(name, specialization), Hospital!inner(name, location)") // Join related tables
+      .eq("doctor_id", selectedDoctor) // Filter by selected doctor
+      .eq("hospital_id", selectedHospital) // Filter by selected hospital
+      .gte("date_available_on_week", nextWeekStart.toISOString()) // Filtering by date
+      .lte("date_available_on_week", nextWeekEnd.toISOString()); // Filtering by date
+
+    if (error) {
+      console.error("Error fetching bookings:", error);
+    } else {
+      setBookings(data); // Update the bookings state with fetched data
+    }
+  };
+
+  const handleHospitalChange = (event) => {
+    const selectedHospital = event.target.value;
+    setSelectedHospital(selectedHospital);
+
+    // Show the map link if a hospital is selected
+    if (selectedHospital) {
+      setShowMapLink(true);
+    } else {
+      setShowMapLink(false);
+    }
+  };
+
+  const handleDoctorChange = (event) => {
+    const selectedDoctor = event.target.value;
+    setSelectedDoctor(selectedDoctor);
   };
 
   return (
@@ -72,24 +115,24 @@ const DocChannel = () => {
                 <select
                   id="hospital"
                   className="form-control"
-                  onMouseEnter={() => setShowMapLink(true)}
+                  onChange={handleHospitalChange} // Handle hospital change
                 >
                   <option value="">-- Select Hospital --</option>
-                  {hospitals.map((hospital, index) => (
-                    <option key={index} value={hospital}>
-                      {hospital}
+                  {hospitals.map((hospital) => (
+                    <option key={hospital.id} value={hospital.id}>
+                      {hospital.name}
                     </option>
                   ))}
                 </select>
-                {showMapLink && (
+                {showMapLink && selectedHospital && (
                   <div>
                     <a
-                      href="/map"
+                      href={`/map?hospital=${selectedHospital}`} // Add query param if needed
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{ color: "blue", fontSize: "14px" }}
                     >
-                      View Hospital Locations
+                      View {selectedHospital} Location on Map
                     </a>
                   </div>
                 )}
@@ -103,11 +146,11 @@ const DocChannel = () => {
                 <select
                   id="doctor"
                   className="form-control"
-                  onMouseEnter={() => setShowMapLink(false)}
+                  onChange={handleDoctorChange} // Handle doctor change
                 >
                   <option value="">-- Select Doctor --</option>
                   {doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.name}>
+                    <option key={doctor.id} value={doctor.id}>
                       {doctor.name} - {doctor.specialization}
                     </option>
                   ))}
@@ -131,17 +174,19 @@ const DocChannel = () => {
                   <h2>Available Bookings</h2>
                   {bookings.map((booking, index) => (
                     <li key={index} style={{ textAlign: "left" }}>
-                      <strong>{booking.date}:</strong> {booking.time}
+                      <strong>{booking.date_available_on_week}:</strong> {booking.time}
+                      <div>
+                        <strong>Doctor:</strong> {booking.Doctor.name} - {booking.Doctor.specialization}
+                      </div>
+                      <div>
+                        <strong>Hospital:</strong> {booking.Hospital.name} - {booking.Hospital.location}
+                      </div>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <div className="why-image">
-                  <img
-                    src={img1}
-                    alt="Try AyurSensei"
-                    style={{ width: "100%" }}
-                  />
+                  <img src={img1} alt="Try AyurSensei" style={{ width: "100%" }} />
                 </div>
               )}
             </div>
