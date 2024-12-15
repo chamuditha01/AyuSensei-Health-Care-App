@@ -30,7 +30,7 @@ const Navbar = () => {
           >
             <ul className="navbar-nav mb-2 mb-lg-0 text-center">
               <li className="nav-item mx-3 d-flex align-items-center">
-                <a className="nav-link active hover-box" aria-current="page" href="/">
+                <a className="nav-link active hover-box" aria-current="page" href="home">
                   Home
                 </a>
               </li>

@@ -1,30 +1,40 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../Components/Molecules/Navbar";
 import img1 from "../../Assets/doctor.jpg";
+import { supabase } from "../../Utils/SuperbaseClient"; // Adjust the path to your Supabase client
 
 const DocChannel = () => {
   const [showMapLink, setShowMapLink] = useState(false);
   const [bookings, setBookings] = useState([]);
   const [search, setSearch] = useState(false);
-
-  const hospitals = [
+  const [hospitals] = useState([
     "City Hospital",
     "Green Valley Clinic",
     "Metro Care Center",
-  ];
-  const doctors = ["Dr. John Doe", "Dr. Jane Smith", "Dr. Emily Clark"];
+  ]);
+  const [doctors, setDoctors] = useState([]);
+
+  useEffect(() => {
+    // Fetch doctors from Supabase
+    const fetchDoctors = async () => {
+      const { data, error } = await supabase.from("Doctors").select("*");
+      if (error) {
+        console.error("Error fetching doctors:", error);
+      } else {
+        setDoctors(data);
+      }
+    };
+
+    fetchDoctors();
+  }, []);
 
   const handleSearch = () => {
-
     setSearch(true);
-    // Sample data for available bookings
     const sampleBookings = [
       { date: "Monday, 12 Dec", time: "10:00 AM - 11:00 AM" },
       { date: "Wednesday, 14 Dec", time: "02:00 PM - 03:00 PM" },
       { date: "Friday, 16 Dec", time: "09:00 AM - 10:00 AM" },
     ];
-
-    // Update state with sample bookings
     setBookings(sampleBookings);
   };
 
@@ -96,9 +106,9 @@ const DocChannel = () => {
                   onMouseEnter={() => setShowMapLink(false)}
                 >
                   <option value="">-- Select Doctor --</option>
-                  {doctors.map((doctor, index) => (
-                    <option key={index} value={doctor}>
-                      {doctor}
+                  {doctors.map((doctor) => (
+                    <option key={doctor.id} value={doctor.name}>
+                      {doctor.name} - {doctor.specialization}
                     </option>
                   ))}
                 </select>
@@ -116,25 +126,23 @@ const DocChannel = () => {
 
             {/* Right Side: Bookings */}
             <div className="bookings" style={{ flex: 1, marginLeft: "20px" }}>
-              
               {bookings.length > 0 ? (
                 <ul>
-                    <h2>Available Bookings</h2>
+                  <h2>Available Bookings</h2>
                   {bookings.map((booking, index) => (
-                    
-                    <li key={index} style={{textAlign:'left'}}>
+                    <li key={index} style={{ textAlign: "left" }}>
                       <strong>{booking.date}:</strong> {booking.time}
                     </li>
                   ))}
                 </ul>
               ) : (
                 <div className="why-image">
-              <img
-                src={img1}
-                alt="Try AyurSensei"
-                style={{ width: "100%" }}
-              />
-            </div>
+                  <img
+                    src={img1}
+                    alt="Try AyurSensei"
+                    style={{ width: "100%" }}
+                  />
+                </div>
               )}
             </div>
           </div>
