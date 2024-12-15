@@ -62,7 +62,7 @@ const Navbar = () => {
                 <span className="vertical-line"></span>
               </li>
               <li className="nav-item mx-3 d-flex align-items-center">
-                <a className="nav-link active hover-box" href="store">
+                <a className="nav-link active hover-box" href="shop">
                   Ayurveda Store
                 </a>
               </li>
