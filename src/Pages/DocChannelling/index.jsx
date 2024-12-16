@@ -9,7 +9,6 @@ const DocChannel = () => {
   const [search, setSearch] = useState(false);
   const [hospitals, setHospitals] = useState([]);
   const [selectedHospital, setSelectedHospital] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState("");
   const [doctors, setDoctors] = useState([]);
 
   useEffect(() => {
@@ -39,21 +38,19 @@ const DocChannel = () => {
 
   const handleSearch = async () => {
     setSearch(true);
-
+  
     // Get the current date and calculate the next week's date range
     const today = new Date();
     const nextWeekStart = new Date(today);
     nextWeekStart.setDate(today.getDate() + (7 - today.getDay())); // Start of next week (Monday)
-
+  
     const nextWeekEnd = new Date(today);
     nextWeekEnd.setDate(today.getDate() + (13 - today.getDay())); // End of next week (Sunday)
-
-    // Fetch available bookings based on selected doctor and hospital
+  
+    // Fetch available bookings with related doctors and hospitals
     const { data, error } = await supabase
       .from("HospitalNDoctors")
       .select("*, Doctor!inner(name, specialization), Hospital!inner(name, location)") // Join related tables
-      .eq("doctor_id", selectedDoctor) // Filter by selected doctor
-      .eq("hospital_id", selectedHospital) // Filter by selected hospital
       .gte("date_available_on_week", nextWeekStart.toISOString()) // Filtering by date
       .lte("date_available_on_week", nextWeekEnd.toISOString()); // Filtering by date
 
@@ -63,6 +60,8 @@ const DocChannel = () => {
       setBookings(data); // Update the bookings state with fetched data
     }
   };
+  
+  
 
   const handleHospitalChange = (event) => {
     const selectedHospital = event.target.value;
@@ -74,11 +73,6 @@ const DocChannel = () => {
     } else {
       setShowMapLink(false);
     }
-  };
-
-  const handleDoctorChange = (event) => {
-    const selectedDoctor = event.target.value;
-    setSelectedDoctor(selectedDoctor);
   };
 
   return (
@@ -116,10 +110,11 @@ const DocChannel = () => {
                   id="hospital"
                   className="form-control"
                   onChange={handleHospitalChange} // Handle hospital change
+                  onMouseEnter={() => setShowMapLink(true)}
                 >
                   <option value="">-- Select Hospital --</option>
                   {hospitals.map((hospital) => (
-                    <option key={hospital.id} value={hospital.id}>
+                    <option key={hospital.id} value={hospital.name}>
                       {hospital.name}
                     </option>
                   ))}
@@ -146,11 +141,11 @@ const DocChannel = () => {
                 <select
                   id="doctor"
                   className="form-control"
-                  onChange={handleDoctorChange} // Handle doctor change
+                  onMouseEnter={() => setShowMapLink(false)}
                 >
                   <option value="">-- Select Doctor --</option>
                   {doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.id}>
+                    <option key={doctor.id} value={doctor.name}>
                       {doctor.name} - {doctor.specialization}
                     </option>
                   ))}
@@ -171,22 +166,21 @@ const DocChannel = () => {
             <div className="bookings" style={{ flex: 1, marginLeft: "20px" }}>
               {bookings.length > 0 ? (
                 <ul>
-                  <h2>Available Bookings</h2>
-                  {bookings.map((booking, index) => (
-                    <li key={index} style={{ textAlign: "left" }}>
-                      <strong>{booking.date_available_on_week}:</strong> {booking.time}
-                      <div>
-                        <strong>Doctor:</strong> {booking.Doctor.name} - {booking.Doctor.specialization}
-                      </div>
-                      <div>
-                        <strong>Hospital:</strong> {booking.Hospital.name} - {booking.Hospital.location}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <h2>Available Bookings</h2>
+                {bookings.map((booking, index) => (
+                  <li key={index} style={{ textAlign: "left" }}>
+                    <strong>{booking.date_available_on_week}:</strong>
+                  </li>
+                ))}
+              </ul>
+              
               ) : (
                 <div className="why-image">
-                  <img src={img1} alt="Try AyurSensei" style={{ width: "100%" }} />
+                  <img
+                    src={img1}
+                    alt="Try AyurSensei"
+                    style={{ width: "100%" }}
+                  />
                 </div>
               )}
             </div>
