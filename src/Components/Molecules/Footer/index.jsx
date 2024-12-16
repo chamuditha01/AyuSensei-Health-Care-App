@@ -8,12 +8,7 @@ import {
   MDBRipple
 } from 'mdb-react-ui-kit';
 import img1 from '../../../Assets/flat-lay-herbal-therapy-products.jpg';
-import f1 from '../../../Assets/f1jpeg.jpeg';
-import f2 from '../../../Assets/f2.jpg';
-import f3 from '../../../Assets/f3.webp';
-import f4 from '../../../Assets/f4.jpg';
-import f5 from '../../../Assets/f5.jpg';
-import f6 from '../../../Assets/f6.jpg';
+
 
 export default function Footer() {
   return (
@@ -40,22 +35,22 @@ export default function Footer() {
               <MDBCol md='2' lg='2' xl='2' className='mx-auto mb-4'>
                 <h6 className='text-uppercase fw-bold mb-4'>Products</h6>
                 <p>
-                  <a href='#!' className='text-reset'>
+                  <a href='shop' className='text-reset'>
                     Herbal Supplements
                   </a>
                 </p>
                 <p>
-                  <a href='#!' className='text-reset'>
+                  <a href='shop' className='text-reset'>
                     Skin Care
                   </a>
                 </p>
                 <p>
-                  <a href='#!' className='text-reset'>
+                  <a href='shop' className='text-reset'>
                     Hair Care
                   </a>
                 </p>
                 <p>
-                  <a href='#!' className='text-reset'>
+                  <a href='shop' className='text-reset'>
                     Detox Kits
                   </a>
                 </p>

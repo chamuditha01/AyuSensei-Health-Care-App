@@ -55,7 +55,7 @@ const Navbar = () => {
               </li>
               <li className="nav-item mx-3 d-flex align-items-center">
                 <a className="nav-link active hover-box" href="doctors">
-                  Doctors
+                  Prescription
                 </a>
               </li>
               <li className="nav-item mx-3 d-flex align-items-center">

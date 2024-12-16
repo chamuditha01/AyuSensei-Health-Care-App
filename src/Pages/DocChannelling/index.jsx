@@ -1,28 +1,29 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../../Components/Molecules/Navbar";
 import img1 from "../../Assets/doctor.jpg";
-import { supabase } from "../../Utils/SuperbaseClient"; // Adjust the path to your Supabase client
+import { supabase } from "../../Utils/SuperbaseClient";
+import Swal from "sweetalert2";
 
 const DocChannel = () => {
   const [showMapLink, setShowMapLink] = useState(false);
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState([]); // Now always an array
   const [search, setSearch] = useState(false);
   const [hospitals, setHospitals] = useState([]);
   const [selectedHospital, setSelectedHospital] = useState("");
   const [doctors, setDoctors] = useState([]);
+  const [selectedDoctor, setSelectedDoctor] = useState("");
 
+  // Fetch hospitals and doctors when the component mounts
   useEffect(() => {
-    // Fetch hospitals from Supabase
     const fetchHospitals = async () => {
       const { data, error } = await supabase.from("Hospitals").select("*");
       if (error) {
         console.error("Error fetching hospitals:", error);
       } else {
-        setHospitals(data); // Update the hospitals state
+        setHospitals(data);
       }
     };
 
-    // Fetch doctors from Supabase
     const fetchDoctors = async () => {
       const { data, error } = await supabase.from("Doctors").select("*");
       if (error) {
@@ -36,42 +37,118 @@ const DocChannel = () => {
     fetchDoctors();
   }, []);
 
+  // Handle search button click
   const handleSearch = async () => {
     setSearch(true);
-  
-    // Get the current date and calculate the next week's date range
-    const today = new Date();
-    const nextWeekStart = new Date(today);
-    nextWeekStart.setDate(today.getDate() + (7 - today.getDay())); // Start of next week (Monday)
-  
-    const nextWeekEnd = new Date(today);
-    nextWeekEnd.setDate(today.getDate() + (13 - today.getDay())); // End of next week (Sunday)
-  
-    // Fetch available bookings with related doctors and hospitals
-    const { data, error } = await supabase
-      .from("HospitalNDoctors")
-      .select("*, Doctor!inner(name, specialization), Hospital!inner(name, location)") // Join related tables
-      .gte("date_available_on_week", nextWeekStart.toISOString()) // Filtering by date
-      .lte("date_available_on_week", nextWeekEnd.toISOString()); // Filtering by date
 
-    if (error) {
-      console.error("Error fetching bookings:", error);
-    } else {
-      setBookings(data); // Update the bookings state with fetched data
+    if (!selectedHospital || !selectedDoctor) {
+      console.error("Please select both a hospital and a doctor.");
+      return;
+    }
+
+    try {
+      // Fetch bookings for the selected hospital and doctor
+      const { data: bookingData, error: bookingError } = await supabase
+        .from("HospitalNDoctors")
+        .select("date_available_on_week")
+        .eq("hospital_id", selectedHospital)
+        .eq("doctor_id", selectedDoctor);
+
+      if (bookingError) {
+        console.error("Error fetching bookings:", bookingError);
+        return;
+      }
+
+      // Fetch the selected hospital
+      const { data: hospitalData } = await supabase
+        .from("Hospitals")
+        .select("name, location_link")
+        .eq("id", selectedHospital)
+        .single();
+
+      // Fetch the selected doctor
+      const { data: doctorData } = await supabase
+        .from("Doctors")
+        .select("name, specialization")
+        .eq("id", selectedDoctor)
+        .single();
+
+      if (hospitalData && doctorData) {
+        // Format the booking dates
+        const nextAvailableDates = bookingData.map((booking) => {
+          return getNextWeekDate(booking.date_available_on_week);
+        });
+
+        setBookings(nextAvailableDates); // Set bookings as an array of dates
+      }
+    } catch (error) {
+      console.error("Error in handleSearch:", error);
     }
   };
-  
-  
 
-  const handleHospitalChange = (event) => {
-    const selectedHospital = event.target.value;
-    setSelectedHospital(selectedHospital);
+  // Function to calculate the next week's date for a specific day
+  const getNextWeekDate = (dayName) => {
+    const daysOfWeek = [
+      "sunday",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+    ];
+    const today = new Date();
+    const todayDayIndex = today.getDay(); // Current day index (0 = Sunday, 1 = Monday, etc.)
+    const targetDayIndex = daysOfWeek.indexOf(dayName.toLowerCase());
 
-    // Show the map link if a hospital is selected
-    if (selectedHospital) {
-      setShowMapLink(true);
-    } else {
-      setShowMapLink(false);
+    if (targetDayIndex === -1) return null; // Invalid day name
+
+    let daysUntilNext = targetDayIndex - todayDayIndex;
+    if (daysUntilNext <= 0) daysUntilNext += 7;
+
+    const nextDate = new Date();
+    nextDate.setDate(today.getDate() + daysUntilNext);
+
+    return nextDate.toDateString();
+  };
+
+  const handleBookingClick = async (selectedDate) => {
+    const doctor = doctors[selectedDoctor - 1];
+    const hospital = hospitals[selectedHospital - 1];
+    const id = localStorage.getItem("userId");
+    
+    // Show SweetAlert2 Popup
+    const { value: prescription } = await Swal.fire({
+      title: "Enter Prescription Letter",
+      input: "text",
+      inputLabel: "Prescription Letter",
+      inputPlaceholder: "Enter the letter...",
+      showCancelButton: true,
+    });
+  
+    if (prescription) {
+      try {
+        const { data, error } = await supabase.from("Prescription").insert([
+          {
+            hospital_id: selectedHospital,
+            doc_id: selectedDoctor,
+            cus_id: id,
+            letter: prescription,
+            date: selectedDate, // Ensure selectedDate is in the correct format
+          },
+        ]);
+      
+        if (error) {
+          console.error("Error inserting data:", error.message);  // Log the specific error message
+          Swal.fire("Error", `Failed to save the prescription: ${error.message}`, "error");
+        } else {
+          Swal.fire("Success", "Prescription saved successfully!", "success");
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);  // Log the full error object
+        Swal.fire("Error", "An unexpected error occurred.", "error");
+      }
+      
     }
   };
 
@@ -91,6 +168,7 @@ const DocChannel = () => {
           Doctor Channeling
         </h1>
       </div>
+
       <div
         className="why-container"
         style={{ backgroundColor: "white", marginTop: "-20px" }}
@@ -109,28 +187,15 @@ const DocChannel = () => {
                 <select
                   id="hospital"
                   className="form-control"
-                  onChange={handleHospitalChange} // Handle hospital change
-                  onMouseEnter={() => setShowMapLink(true)}
+                  onChange={(e) => setSelectedHospital(e.target.value)}
                 >
                   <option value="">-- Select Hospital --</option>
                   {hospitals.map((hospital) => (
-                    <option key={hospital.id} value={hospital.name}>
+                    <option key={hospital.id} value={hospital.id}>
                       {hospital.name}
                     </option>
                   ))}
                 </select>
-                {showMapLink && selectedHospital && (
-                  <div>
-                    <a
-                      href={`/map?hospital=${selectedHospital}`} // Add query param if needed
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "blue", fontSize: "14px" }}
-                    >
-                      View {selectedHospital} Location on Map
-                    </a>
-                  </div>
-                )}
               </div>
 
               {/* Doctor Selector */}
@@ -141,11 +206,11 @@ const DocChannel = () => {
                 <select
                   id="doctor"
                   className="form-control"
-                  onMouseEnter={() => setShowMapLink(false)}
+                  onChange={(e) => setSelectedDoctor(e.target.value)}
                 >
                   <option value="">-- Select Doctor --</option>
                   {doctors.map((doctor) => (
-                    <option key={doctor.id} value={doctor.name}>
+                    <option key={doctor.id} value={doctor.id}>
                       {doctor.name} - {doctor.specialization}
                     </option>
                   ))}
@@ -166,14 +231,25 @@ const DocChannel = () => {
             <div className="bookings" style={{ flex: 1, marginLeft: "20px" }}>
               {bookings.length > 0 ? (
                 <ul>
-                <h2>Available Bookings</h2>
-                {bookings.map((booking, index) => (
-                  <li key={index} style={{ textAlign: "left" }}>
-                    <strong>{booking.date_available_on_week}:</strong>
+                  <h2>Next Available Booking Dates</h2>
+                  {bookings.map((date, index) => (
+                    <li
+                    key={index}
+                    style={{
+                      textAlign: "left",
+                      border: "2px solid black",
+                      padding: "10px",
+                      margin: "10px",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => handleBookingClick(date)} // Trigger Swal on click
+                  >
+                    {date} - {doctors[selectedDoctor - 1]?.name} -{" "}
+                    {doctors[selectedDoctor - 1]?.specialization} <br />
+                    {hospitals[selectedHospital - 1]?.name} 
                   </li>
-                ))}
-              </ul>
-              
+                  ))}
+                </ul>
               ) : (
                 <div className="why-image">
                   <img

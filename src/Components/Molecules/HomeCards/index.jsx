@@ -30,7 +30,7 @@ const HomeCards = () => {
       <h5 class="card-title">Ayurvedic Medicine</h5>
       <p class="card-text">This card has supporting text below as a natural lead-in to additional content.</p>
       <div style={{marginTop:'20%'}}></div>
-      <ButtonHomeCards title="Ckeck Up" href="bla" />
+      <ButtonHomeCards title="See Medicines" href="shop" />
     </div>
   </div>
   <span className="vertical-line"></span>

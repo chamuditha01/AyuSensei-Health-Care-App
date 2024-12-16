@@ -1,12 +1,59 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../Components/Molecules/Navbar";
 import img1 from "../../Assets/top-view-mint-cinnamon-with-spices-white-ingredients-leaves.jpg";
 import imgvkp from '../../Assets/dosha.webp'
 import HomeCards from "../../Components/Molecules/HomeCards";
 import './index.css';
 import Footer from "../../Components/Molecules/Footer";
+import { supabase } from "../../Utils/SuperbaseClient";
+import Swal from "sweetalert2";
 
 const Home = () => {
+
+  const [userId, setUserId] = useState(null);
+  const [username, setUsername] = useState("");
+  const Swal = require('sweetalert2');
+  
+
+  useEffect(() => {
+    // Retrieve the user ID from localStorage
+    const id = localStorage.getItem("userId");
+    if (id) {
+      setUserId(id);
+      fetchUsername(id);
+    }
+  }, []);
+
+
+  const fetchUsername = async (id) => {
+    try {
+      // Query Supabase to get the username based on the user ID
+      const { data, error } = await supabase
+        .from("Users") // Replace with your Supabase table name
+        .select("name") // Fetch only the username field
+        .eq("id", id) // Filter by the user ID
+        .single(); // Expect a single row
+
+      if (error || !data) {
+        console.error("Error fetching username:", error?.message);
+        setUsername("User");
+        return;
+      }
+
+     
+      setUsername(data.username); // Set the username in state
+
+  
+      
+      
+
+    
+    } catch (err) {
+      console.error("Fetch Username Error:", err.message);
+      setUsername("User");
+
+    }
+  };
   return (
     <div>
       <Navbar />
