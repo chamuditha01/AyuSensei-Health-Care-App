@@ -7,7 +7,7 @@ import MapView from './Pages/MapView';
 import Docchannel from './Pages/DocChannelling';
 import ShopHome from './Pages/Shop/ShopHome';
 import Login from './Pages/Login';
-import APItest from './Pages/APItest';
+
 
 function App() {
   return (
@@ -21,7 +21,7 @@ function App() {
           <Route path="/doctors" element={<Docchannel/>} />
           <Route path="/shop" element={<ShopHome/>} />
           <Route path="/home" element={<Home/>} />
-          <Route path="/api" element={<APItest/>} />
+         
         </Routes>
       </BrowserRouter>
     </div>
