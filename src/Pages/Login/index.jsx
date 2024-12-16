@@ -15,7 +15,8 @@ function Login() {
   return (
     <MDBContainer fluid className="p-5 my-6">
       <MDBRow>
-        <h1>Ayur sensei</h1>
+      <h1 style={{ color: 'green' }}>WELCOME TO AYU SENSEI</h1>
+
         <MDBCol col="10" md="6">
           <img src={img} class="img-fluid" alt="Phone image" />
         </MDBCol>
