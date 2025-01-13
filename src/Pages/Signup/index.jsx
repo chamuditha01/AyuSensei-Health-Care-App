@@ -32,23 +32,29 @@ function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const table = formData.role === "doctor" ? "Doctors" : "Users"; // Determine the table based on role
+
+    const dataToInsert = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      telephone: formData.telephone,
+    };
+
+    if (formData.role === "doctor") {
+      dataToInsert.specialization = formData.specialization;
+    }
+
     try {
       const { data, error } = await supabase
-        .from("Users") // Replace with your actual table name
-        .insert([
-          {
-            name: formData.name,
-            email: formData.email,
-            password: formData.password,
-            telephone: formData.telephone,
-          },
-        ]);
+        .from(table) // Use the determined table name
+        .insert([dataToInsert]);
 
       if (error) {
         setMessage(`Error: ${error.message}`);
       } else {
         setMessage("User registered successfully!");
-        setFormData({ name: "", email: "", password: "", telephone: "" }); // Clear the form
+        setFormData({ name: "", email: "", password: "", telephone: "", role: "", specialization: "" }); // Clear the form
       }
     } catch (err) {
       setMessage(`Error: ${err.message}`);
@@ -128,6 +134,39 @@ function SignUp() {
                 required
               />
             </label>
+
+            <label style={{ width: "100%" }}>
+              Role
+              <select
+                className="mb-4"
+                id="formRole"
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                style={{ width: "100%", padding: "10px", fontSize: "16px" }}
+                required
+              >
+                <option value="">Select Role</option>
+                <option value="doctor">Doctor</option>
+                <option value="patient">Patient</option>
+              </select>
+            </label>
+            {formData.role === "doctor" && (
+              <label style={{ width: "100%" }}>
+                Specialization
+                <MDBInput
+                  wrapperClass="mb-4"
+                  placeholder="Specialization"
+                  id="formSpecialization"
+                  name="specialization"
+                  value={formData.specialization || ""}
+                  onChange={handleChange}
+                  type="text"
+                  size="lg"
+                  required
+                />
+              </label>
+            )}
 
             <MDBBtn
               className="mb-4 w-100"

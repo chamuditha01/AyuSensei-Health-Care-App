@@ -19,19 +19,43 @@ function Login() {
     e.preventDefault();
 
     try {
-      // Fetch user data where email matches
-      const { data, error } = await supabase
+      // Fetch user data where email matches from Users table
+      let { data, error } = await supabase
         .from("Users") // Replace with your Supabase table name
         .select("id, password") // Fetch 'id' and 'password' fields
         .eq("email", email)
         .single(); // Expect a single row for the entered email
 
       if (error || !data) {
-        setErrorMessage("Email not found. Please check and try again.");
-        return;
+        // If no user found in Users table, check Doctors table
+        ({ data, error } = await supabase
+          .from("Doctors") // Replace with your Supabase table name
+          .select("id, password") // Fetch 'id' and 'password' fields
+          .eq("email", email)
+          .single()); // Expect a single row for the entered email
+
+        if (error || !data) {
+          setErrorMessage("Email not found. Please check and try again.");
+          return;
+        } else {
+          // Check if the password matches for doctor
+          if (data.password === password) {
+            const doctorId = data.id; // Get the doctor ID
+
+            // Store doctor ID in localStorage (or sessionStorage)
+            localStorage.setItem("doctorId", doctorId);
+
+            // Redirect to doctor page
+            window.location.href = `/doctor`;
+            return;
+          } else {
+            setErrorMessage("Invalid password. Please try again.");
+            return;
+          }
+        }
       }
 
-      // Check if the password matches
+      // Check if the password matches for user
       if (data.password === password) {
         const userId = data.id; // Get the user ID
 

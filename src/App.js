@@ -8,6 +8,7 @@ import Docchannel from './Pages/DocChannelling';
 import ShopHome from './Pages/Shop/ShopHome';
 import Login from './Pages/Login';
 import SignUp from './Pages/Signup';
+import Doctorpage from './Pages/Doctor';
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
           <Route path="/shop" element={<ShopHome/>} />
           <Route path="/home" element={<Home/>} />
          <Route path="/signup" element={<SignUp/>} />
+         <Route path="/doctor" element={<Doctorpage/>} />
         </Routes>
       </BrowserRouter>
     </div>
