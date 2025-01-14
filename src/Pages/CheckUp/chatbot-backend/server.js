@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(bodyParser.json());
@@ -19,7 +19,7 @@ app.post('/chat', async (req, res) => {
 
   try {
     const response = await axios.post(
-      `${AZURE_ENDPOINT}`, // Replace with the full Azure endpoint if needed
+      AZURE_ENDPOINT,
       {
         prompt: userMessage,
         max_tokens: 100,

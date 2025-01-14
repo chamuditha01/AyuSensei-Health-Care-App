@@ -5,6 +5,7 @@ import img2 from "../../Assets/dosha.webp";
 import './index.css';
 import CheckupBottum from "../../Components/Molecules/CheckupBottum";
 
+// List of questions with options
 const questions = [
   {
     id: 1,
@@ -116,6 +117,8 @@ const CheckUp = () => {
   const [testStarted, setTestStarted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [doshaResult, setDoshaResult] = useState(null);
+  const [testCompleted, setTestCompleted] = useState(false); // New state to track test completion
 
   const handleStartTest = () => {
     setTestStarted(true);
@@ -130,7 +133,10 @@ const CheckUp = () => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
       } else {
-        console.log("Test completed:", answers);
+        // Calculate Dosha after all questions are answered
+        const result = calculateDosha(answers);
+        setDoshaResult(result);
+        setTestCompleted(true); // Mark test as completed
       }
     }
   };
@@ -139,6 +145,43 @@ const CheckUp = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
+  };
+
+  // Function to calculate Dosha based on answers
+  const calculateDosha = (answers) => {
+    let vata = 0, pitta = 0, kapha = 0;
+
+    // Example simple logic to classify doshas based on answers
+    Object.values(answers).forEach((answer) => {
+      if (["I am very active.", "Rarely", "Very restful", "Thin"].includes(answer)) vata++;
+      if (["Moderately", "Hot", "Strong", "Regular"].includes(answer)) pitta++;
+      if (["Moderate", "Cold", "Irregular", "Large"].includes(answer)) kapha++;
+    });
+
+    if (vata > pitta && vata > kapha) return { dosha: "Vata", bodyConstitution: "Vata types are generally light, energetic, and active, with a tendency to have dry skin and a slender frame.",
+      presentLifestyleHabits: "You may have irregular eating habits, tend to overthink, and might feel anxious or stressed frequently. You may have difficulty maintaining a steady routine.",
+      futureAnalysis: "You will benefit from grounding activities such as yoga and meditation. Focus on building a balanced lifestyle with regular meals and adequate rest to calm your nervous system and improve your overall well-being." };
+
+    if (pitta > vata && pitta > kapha) return { dosha: "Pitta",  bodyConstitution: "Pitta types have a medium build, muscular frame, and tend to have a warm body temperature with oily skin and a sharp intellect.",
+      presentLifestyleHabits: "You are likely to be passionate, driven, and focused, but you might be prone to irritability, anger, and digestive issues like acidity.",
+      futureAnalysis: "To maintain balance, you should avoid overheating and focus on staying calm. Incorporate cooling foods, regular exercise, and stress-relieving practices such as deep breathing and relaxation exercises." };
+
+    if (kapha > vata && kapha > pitta) return { dosha: "Kapha",  bodyConstitution: "Kapha types are often strong, solid, and have a tendency toward a heavier, more muscular build. They may have oily skin and thick hair.",
+      presentLifestyleHabits: "You may experience sluggish digestion, a tendency to gain weight easily, and prefer routines over change. Stress might affect you less emotionally but can lead to physical issues like lethargy.",
+      futureAnalysis: "To improve your vitality, engage in regular physical activities and adopt a lighter, spicier diet. Avoid excessive sleep and strive for mental stimulation to keep your energy levels high and your mind sharp." };
+
+
+    return { dosha: "Balanced", bodyConstitution: "You have a balanced constitution with characteristics from all three doshas.",
+      presentLifestyleHabits: "You are likely to be adaptable and stable in your routine. However, there could be moments when one dosha becomes more prominent than others, affecting your well-being.",
+      futureAnalysis: "Maintain your balanced approach to life by engaging in activities that support all areas—physical, mental, and emotional health. Focus on moderation, flexibility, and resilience to prevent imbalances." };
+  };
+
+  // Function to apply a class for selected answer
+  const getOptionClass = (option) => {
+    if (answers[currentQuestionIndex] === option) {
+      return "selected-answer";
+    }
+    return "";
   };
 
   return (
@@ -199,11 +242,11 @@ const CheckUp = () => {
       <div className="why-container">
         <div className="why-content">
           <div className="why-section" style={{ padding: "0px" }}>
-            <div className="why-image" style={{width:'40%',padding:'20px'}}>
+            <div className="why-image" style={{ width: '40%', padding: '20px' }}>
               <img
                 src={img2}
                 alt="Why AyurSensei"
-                style={{ borderRadius: "0px",objectFit:'cover' }}
+                style={{ borderRadius: "0px", objectFit: 'cover' }}
               />
             </div>
             <div className="why-text">
@@ -215,105 +258,60 @@ const CheckUp = () => {
                     AyurSensei provides personalized Ayurvedic consultations and
                     treatments tailored to your unique needs. Our experienced
                     practitioners use traditional methods combined with modern
-                    insights to help you achieve optimal health and wellness.
-                    Join us on a journey to a healthier, more balanced life.
+                    insights to help you achieve balance and well-being.
                   </p>
-                  <div style={{ marginTop: "50px" }}>
-                    <button
-                      id="homecardbtn"
-                      onClick={handleStartTest}
-                      style={{ marginTop: "20px" }}
-                    >
-                      Start Test
-                    </button>
-                  </div>
+                  <button onClick={handleStartTest} className="start-button">
+                    Start Test
+                  </button>
                 </>
               ) : (
-                <div style={{ marginTop: "20px" }}>
-                  <h2>
-                    Question {currentQuestionIndex + 1} of {questions.length}
-                  </h2>
-                  <p>{questions[currentQuestionIndex].question}</p>
-                  {questions[currentQuestionIndex].options.map(
-                    (option, index) => (
-                      <div key={index}>
-                        <button
-                          style={{
-                            margin: "5px",
-                            padding: "10px",
-                            width: "100%",
-                            textAlign: "left",
-                            backgroundColor:
-                              answers[currentQuestionIndex] === option
-                                ? "#d1e7dd"
-                                : "#f8f8f8",
-                            border: "1px solid #ccc",
-                            borderRadius: "5px",
-                            cursor: "pointer",
-                          }}
-                          onClick={() => handleAnswerSelect(option)}
-                        >
-                          {option}
-                        </button>
-                      </div>
-                    )
-                  )}
-                  <div
-                    style={{
-                      marginTop: "20px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <button
-                    
-                      onClick={handlePrevious}
-                      disabled={currentQuestionIndex === 0}
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor:
-                          currentQuestionIndex === 0 ? "#ccc" : "green",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10%",
-                        cursor:
-                          currentQuestionIndex === 0
-                            ? "not-allowed"
-                            : "pointer",
-                      }}
-                    >
-                      Previous
-                    </button>
-                    <button
-                    
-                      onClick={handleNext}
-                      disabled={!answers[currentQuestionIndex]} // Disable if no answer selected
-                      style={{
-                        padding: "10px 20px",
-                        backgroundColor: answers[currentQuestionIndex]
-                          ? "green"
-                          : "green",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "10%",
-                        marginLeft: "10px",
-                        cursor: answers[currentQuestionIndex]
-                          ? "pointer"
-                          : "not-allowed",
-                      }}
-                    >
-                      {currentQuestionIndex < questions.length - 1
-                        ? "Next"
-                        : "Submit"}
-                    </button>
+                <>
+                  <h2>{questions[currentQuestionIndex].question}</h2>
+                  <div className="options-container">
+                    {questions[currentQuestionIndex].options.map((option, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleAnswerSelect(option)}
+                        className={`option-button ${getOptionClass(option)}`}
+                      >
+                        {option}
+                      </button>
+                    ))}
                   </div>
-                </div>
+                  <div style={{ marginTop: "20px" }}>
+                    {!testCompleted && (
+                      <>
+                        <button onClick={handlePrevious} disabled={currentQuestionIndex === 0}>
+                          Previous
+                        </button>
+                        <button onClick={handleNext}>
+                          {currentQuestionIndex === questions.length - 1 ? "Submit" : "Next"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {testCompleted && (
+                   <div style={{ marginTop: "20px" }}>
+                   <h3 className="highlighted-text">Your Dosha is : {doshaResult.dosha}</h3>
+                   <p>
+                     <span className="highlighted-text-green">Your Body Constitution Explanation:</span> {doshaResult.bodyConstitution}
+                   </p>
+                   <p>
+                     <span className="highlighted-text-purple">Present Lifestyle Habits You Can Follow:</span> {doshaResult.presentLifestyleHabits}
+                   </p>
+                   <p>
+                     <span className="highlighted-text-red">Your Future Analysis:</span> {doshaResult.futureAnalysis}
+                   </p>
+                 </div>
+                 
+                  )}
+                </>
               )}
             </div>
           </div>
         </div>
       </div>
-      <CheckupBottum/>
+      <CheckupBottum />
     </div>
   );
 };
