@@ -12,10 +12,14 @@
     "ajv": "^8.17.1",
     "ajv-keywords": "^5.1.0",
     "axios": "^1.7.9",
+    "body-parser": "^1.20.3",
     "bootstrap": "^5.3.3",
+    "cors": "^2.8.5",
     "dompurify": "^3.2.3",
+    "express": "^4.21.2",
     "leaflet": "^1.9.4",
     "mdb-react-ui-kit": "^9.0.0",
+    "mongoose": "^8.9.5",
     "openai": "^4.76.3",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.6",
@@ -58,5 +62,10 @@
   },
   "resolutions": {
     "@popperjs/core": "2.11.5"
-  }
+  },
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
