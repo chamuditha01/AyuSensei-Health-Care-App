@@ -62,7 +62,7 @@ function SignUp() {
   };
 
   return (
-    <MDBContainer fluid className="p-5 my-6">
+    <MDBContainer fluid className="p-5 my-6" style={{width:'80%'}}>
       <MDBRow>
         <h1>Ayur Sensei - Sign Up</h1>
         <MDBCol col="10" md="6">

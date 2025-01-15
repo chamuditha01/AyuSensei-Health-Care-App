@@ -28,7 +28,6 @@ const ShopHome = () => {
   const handleBuyNow = async (product) => {
     try {
       const cus_id = localStorage.getItem("userId"); // Assuming you store the user ID in localStorage
-      console.log("cus_id", cus_id);
       if (!cus_id) {
         Swal.fire({
           title: "Error",
@@ -38,7 +37,7 @@ const ShopHome = () => {
         return;
       }
 
-      // Use SweetAlert to get the quantity
+      // Step 1: Prompt user for quantity
       const { value: quantityToBuy } = await Swal.fire({
         title: `How many ${product.name} would you like to buy?`,
         input: "number",
@@ -49,7 +48,7 @@ const ShopHome = () => {
         },
         inputValue: 1, // Default value
         showCancelButton: true,
-        confirmButtonText: "Buy Now",
+        confirmButtonText: "Next",
         cancelButtonText: "Cancel",
         inputValidator: (value) => {
           if (!value || value < 1 || value > product.quantity) {
@@ -65,7 +64,60 @@ const ShopHome = () => {
 
       const total_price = product.price * quantityToBuy;
 
-      // Add order to the database
+      // Step 2: Prompt user for shipping address
+      const { value: shippingAddress } = await Swal.fire({
+        title: "Enter Shipping Address",
+        input: "textarea",
+        inputPlaceholder: "Enter your address here...",
+        inputAttributes: {
+          "aria-label": "Type your shipping address here",
+        },
+        showCancelButton: true,
+        confirmButtonText: "Next",
+        cancelButtonText: "Cancel",
+        inputValidator: (value) => {
+          if (!value) {
+            return "Shipping address cannot be empty";
+          }
+        },
+      });
+
+      // If user cancels, don't continue
+      if (!shippingAddress) {
+        return;
+      }
+
+      // Step 3: Dummy payment form
+      const { isConfirmed } = await Swal.fire({
+        title: "Payment Details",
+        html: `
+          <p>Total Price: Rs.${total_price}</p>
+          <input type="text" id="cardNumber" class="swal2-input" placeholder="Card Number">
+          <input type="text" id="cardHolder" class="swal2-input" placeholder="Card Holder Name">
+          <input type="text" id="expiry" class="swal2-input" placeholder="Expiry Date (MM/YY)">
+          <input type="text" id="cvv" class="swal2-input" placeholder="CVV">
+        `,
+        showCancelButton: true,
+        confirmButtonText: "Pay Now",
+        cancelButtonText: "Cancel",
+        preConfirm: () => {
+          const cardNumber = Swal.getPopup().querySelector("#cardNumber").value;
+          const cardHolder = Swal.getPopup().querySelector("#cardHolder").value;
+          const expiry = Swal.getPopup().querySelector("#expiry").value;
+          const cvv = Swal.getPopup().querySelector("#cvv").value;
+
+          if (!cardNumber || !cardHolder || !expiry || !cvv) {
+            Swal.showValidationMessage("Please fill all fields!");
+          }
+        },
+      });
+
+      // If payment is not confirmed, don't continue
+      if (!isConfirmed) {
+        return;
+      }
+
+      // Step 4: Save the order in the database
       const { error } = await supabase.from("Order").insert([
         {
           cus_id,
@@ -73,6 +125,7 @@ const ShopHome = () => {
           quantity: quantityToBuy,
           date: new Date().toISOString().split("T")[0], // Current date
           total_price,
+          address: shippingAddress, // Save the address
         },
       ]);
 
@@ -102,10 +155,9 @@ const ShopHome = () => {
         } else {
           Swal.fire({
             title: "Order Placed!",
-            text: `You purchased ${quantityToBuy} of ${product.name} for Rs.${total_price}.`,
+            text: `You purchased ${quantityToBuy} of ${product.name} for Rs.${total_price}. Shipping address: ${shippingAddress}`,
             icon: "success",
           });
-          
 
           // Re-fetch the product list to reflect the updated quantity
           const { data } = await supabase

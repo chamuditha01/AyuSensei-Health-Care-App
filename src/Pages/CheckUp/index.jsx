@@ -260,7 +260,7 @@ const CheckUp = () => {
                     practitioners use traditional methods combined with modern
                     insights to help you achieve balance and well-being.
                   </p>
-                  <button onClick={handleStartTest} className="start-button">
+                  <button onClick={handleStartTest} className="start-button" id="homecardbtn" style={{width:'100px'}}>
                     Start Test
                   </button>
                 </>
@@ -270,6 +270,7 @@ const CheckUp = () => {
                   <div className="options-container">
                     {questions[currentQuestionIndex].options.map((option, index) => (
                       <button
+                        style={{borderRadius:'10px'}}
                         key={index}
                         onClick={() => handleAnswerSelect(option)}
                         className={`option-button ${getOptionClass(option)}`}
@@ -281,10 +282,10 @@ const CheckUp = () => {
                   <div style={{ marginTop: "20px" }}>
                     {!testCompleted && (
                       <>
-                        <button onClick={handlePrevious} disabled={currentQuestionIndex === 0}>
+                        <button id="homecardbtn" style={{marginRight:'10px',width:'100px'}} onClick={handlePrevious} disabled={currentQuestionIndex === 0}>
                           Previous
                         </button>
-                        <button onClick={handleNext}>
+                        <button id="homecardbtn" style={{width:'100px'}} onClick={handleNext}>
                           {currentQuestionIndex === questions.length - 1 ? "Submit" : "Next"}
                         </button>
                       </>
